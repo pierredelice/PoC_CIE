@@ -16,24 +16,24 @@ class MedicalDataset(Dataset):
         
     def preprocess(self):
         self.cause_sequences = []
-        self.labels_sequences = []
+        self.causa_icd_sequences = []
         
         for item in self.data:
             # For prediction, item contains only diagnosis text
             if self.is_prediction:
                 cause = item
-                labels = None
+                causa_icd = None
             else:
-                cause, labels = item
+                cause, causa_icd = item
             
             # Tokenize cause
             cause_tokens = [self.word_to_idx.get(word, self.word_to_idx['<UNK>']) for word in cause.split()]
             self.cause_sequences.append(torch.tensor(cause_tokens, dtype=torch.long))
             
-            # Encode labels if available
-            if labels is not None:
-                labels_encoded = self.label_encoder.transform([labels])[0]
-                self.labels_sequences.append(labels_encoded)
+            # Encode causa_icd if available
+            if causa_icd is not None:
+                causa_icd_encoded = self.label_encoder.transform([causa_icd])[0]
+                self.causa_icd_sequences.append(causa_icd_encoded)
     
     def __len__(self):
         return len(self.cause_sequences)
@@ -42,7 +42,7 @@ class MedicalDataset(Dataset):
         if self.is_prediction:
             return self.cause_sequences[idx]
         else:
-            return self.cause_sequences[idx], self.labels_sequences[idx]
+            return self.cause_sequences[idx], self.causa_icd_sequences[idx]
 
 
 # Step 2: Tokenization and Label Encoding
@@ -56,10 +56,10 @@ def prepare_data(data):
 
     # Encode labels
     label_encoder = LabelEncoder()
-    labels = [labels for _, labels in data]
+    labels = [causa_icd for _, causa_icd in data]
     label_encoder.fit(labels)
     
-    return word_to_idx, label_encoder, vocab
+    return word_to_idx, label_encoder
 
 
 # Step 6: Define the Collate Function
